@@ -1,0 +1,61 @@
+:root {
+  --app-background: #e9edf3;
+  --panel-color: rgba(255, 255, 255, 0.58);
+  --panel-strong: rgba(255, 255, 255, 0.74);
+  --sidebar-background: rgba(248, 250, 253, 0.5);
+  --border-color: rgba(255, 255, 255, 0.52);
+  --border-color-soft: rgba(255, 255, 255, 0.3);
+  --body-text-color: #17212b;
+  --muted-text-color: #617182;
+  --accent-text-color: #0a7f72;
+  --accent-soft: rgba(179, 242, 232, 0.4);
+  --highlight-color: #3b82f6;
+  --success-soft: rgba(193, 243, 220, 0.42);
+  --shadow-soft: 0 18px 60px rgba(73, 96, 128, 0.15);
+  --shadow-strong: 0 28px 80px rgba(70, 92, 124, 0.18);
+  --glass-highlight: linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.24));
+  font-family:
+    Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color: var(--body-text-color);
+  background-color: var(--app-background);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  min-width: 320px;
+  background:
+    linear-gradient(135deg, #d8e4f6 0%, #eef4fb 24%, #e8f1ee 48%, #f3f6fb 70%, #e4edf8 100%);
+  background-attachment: fixed;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+::selection {
+  background: rgba(14, 118, 96, 0.16);
+}
