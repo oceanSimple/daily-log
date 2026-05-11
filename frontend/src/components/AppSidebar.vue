@@ -1,76 +1,119 @@
 <template>
-  <aside class="sidebar">
+  <aside class="sidebar" :class="{ 'sidebar--collapsed': collapsed }">
     <div class="sidebar__top">
       <div class="brand">
         <div class="brand-mark">DL</div>
-        <div>
-          <p class="brand-name">Daily Log</p>
-          <p class="brand-meta">Personal daily hub</p>
-        </div>
-      </div>
-
-      <div class="sidebar-summary">
-        <p class="sidebar-summary__label">Today</p>
-        <p class="sidebar-summary__value">Focus the day before the day gets noisy.</p>
+        <p v-if="!collapsed" class="brand-name">Daily Log</p>
       </div>
     </div>
 
     <nav class="nav-list" aria-label="Main navigation">
-      <RouterLink
+      <n-tooltip
         v-for="item in items"
         :key="item.to"
-        :to="item.to"
-        class="nav-item"
-        active-class="is-active"
+        trigger="hover"
+        placement="right"
+        :disabled="!collapsed"
       >
-        <div class="nav-copy">
-          <span class="nav-label">{{ item.label }}</span>
-          <span class="nav-note">{{ item.note }}</span>
-        </div>
-      </RouterLink>
+        <template #trigger>
+          <RouterLink
+            :to="item.to"
+            class="nav-item"
+            :class="{ 'nav-item--collapsed': collapsed }"
+            active-class="is-active"
+          >
+            <span class="nav-icon">
+              <n-icon size="18">
+                <component :is="item.icon" />
+              </n-icon>
+            </span>
+            <span v-if="!collapsed" class="nav-label">{{ item.label }}</span>
+          </RouterLink>
+        </template>
+        {{ item.label }}
+      </n-tooltip>
     </nav>
 
-    <div class="sidebar-footer">
-      <p class="sidebar-footer__title">MVP mode</p>
-      <p class="sidebar-footer__copy">Tasks, events, journal, summary. Just enough structure to keep the week upright.</p>
-    </div>
+    <n-tooltip trigger="hover" placement="right" :disabled="!collapsed">
+      <template #trigger>
+        <button
+          type="button"
+          class="settings-entry"
+          :class="{ 'settings-entry--collapsed': collapsed }"
+          @click="$emit('openSettings')"
+        >
+          <span class="nav-icon">
+            <n-icon size="18">
+              <SettingsIcon />
+            </n-icon>
+          </span>
+          <span v-if="!collapsed" class="nav-label">{{ t('sidebar.settings') }}</span>
+        </button>
+      </template>
+      {{ t('sidebar.settings') }}
+    </n-tooltip>
   </aside>
 </template>
 
 <script setup lang="ts">
+import { NIcon, NTooltip } from 'naive-ui';
 import { RouterLink } from 'vue-router';
 
+import { useAppLocale } from '@/composables/useAppLocale';
+import { SettingsIcon } from '@/components/task-icons';
+
 defineProps<{
+  collapsed: boolean;
   items: Array<{
+    icon: unknown;
     label: string;
-    note: string;
     to: string;
   }>;
 }>();
+
+defineEmits<{
+  openSettings: [];
+}>();
+
+const { t } = useAppLocale();
 </script>
 
 <style scoped>
 .sidebar {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 18px;
+  height: 100%;
+  min-height: 0;
   padding: 24px 18px 18px;
   border-right: 1px solid rgba(255, 255, 255, 0.4);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.36), rgba(255, 255, 255, 0.14)),
     var(--sidebar-background);
   backdrop-filter: blur(28px) saturate(150%);
+  overflow-y: auto;
+  transition: padding 0.18s ease;
+}
+
+.sidebar--collapsed {
+  padding-inline: 12px;
 }
 
 .sidebar__top {
   display: grid;
-  gap: 18px;
+  gap: 12px;
 }
 
 .brand {
   display: flex;
   gap: 14px;
   align-items: center;
+  min-width: 0;
+}
+
+.sidebar--collapsed .brand {
+  width: 100%;
+  justify-content: center;
 }
 
 .brand-mark {
@@ -91,55 +134,11 @@ defineProps<{
     0 12px 24px rgba(49, 104, 167, 0.18);
 }
 
-.brand-name,
-.brand-meta {
-  margin: 0;
-}
-
 .brand-name {
+  margin: 0;
   font-size: 15px;
   font-weight: 700;
-}
-
-.brand-meta {
-  margin-top: 4px;
-  color: var(--muted-text-color);
-  font-size: 12px;
-}
-
-.sidebar-summary,
-.sidebar-footer {
-  padding: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.42);
-  border-radius: 16px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.54), rgba(255, 255, 255, 0.24)),
-    rgba(244, 248, 252, 0.36);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.58);
-  backdrop-filter: blur(22px) saturate(150%);
-}
-
-.sidebar-summary__label,
-.sidebar-summary__value,
-.sidebar-footer__title,
-.sidebar-footer__copy {
-  margin: 0;
-}
-
-.sidebar-summary__label,
-.sidebar-footer__title {
-  color: var(--muted-text-color);
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.sidebar-summary__value,
-.sidebar-footer__copy {
-  margin-top: 8px;
-  font-size: 13px;
-  line-height: 1.55;
+  white-space: nowrap;
 }
 
 .nav-list {
@@ -148,12 +147,17 @@ defineProps<{
   align-content: start;
 }
 
-.nav-item {
-  display: block;
-  padding: 14px 14px 13px;
+.nav-item,
+.settings-entry {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 14px;
   border: 1px solid transparent;
   border-radius: 16px;
   color: inherit;
+  background: transparent;
+  cursor: pointer;
   transition:
     background-color 0.18s ease,
     border-color 0.18s ease,
@@ -161,7 +165,18 @@ defineProps<{
     box-shadow 0.18s ease;
 }
 
-.nav-item:hover {
+.settings-entry {
+  margin-top: auto;
+}
+
+.nav-item--collapsed,
+.settings-entry--collapsed {
+  justify-content: center;
+  padding-inline: 12px;
+}
+
+.nav-item:hover,
+.settings-entry:hover {
   border-color: rgba(255, 255, 255, 0.42);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.48), rgba(255, 255, 255, 0.18)),
@@ -182,24 +197,25 @@ defineProps<{
     0 14px 28px rgba(96, 131, 173, 0.12);
 }
 
-.nav-copy {
-  display: grid;
-  gap: 4px;
+.nav-icon {
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .nav-label {
+  min-width: 0;
   font-size: 14px;
   font-weight: 600;
-}
-
-.nav-note {
-  color: var(--muted-text-color);
-  font-size: 12px;
-  line-height: 1.45;
+  white-space: nowrap;
 }
 
 @media (max-width: 900px) {
-  .sidebar {
+  .sidebar,
+  .sidebar--collapsed {
     padding: 20px 16px;
     border-right: 0;
     border-bottom: 1px solid var(--border-color);
@@ -210,8 +226,10 @@ defineProps<{
     align-content: start;
   }
 
-  .sidebar-footer {
-    display: none;
+  .nav-item--collapsed,
+  .settings-entry--collapsed {
+    justify-content: flex-start;
+    padding-inline: 14px;
   }
 }
 </style>

@@ -1,6 +1,6 @@
 <template>
   <div class="page-stack">
-    <PageHeader eyebrow="Tasks" title="今天的执行台" description="">
+    <PageHeader :eyebrow="t('tasks.eyebrow')" description="">
       <template #meta>
         <div class="meta-stack">
           <span class="meta-stack__label">{{ dayLabel }}</span>
@@ -9,7 +9,7 @@
     </PageHeader>
 
     <section class="planner-grid">
-      <SectionCard title="日程">
+      <SectionCard :title="t('tasks.eventTitle')">
         <template #header>
           <n-tooltip trigger="hover">
             <template #trigger>
@@ -19,7 +19,7 @@
                 </template>
               </n-button>
             </template>
-            新增日程
+            {{ t('tasks.createEvent') }}
           </n-tooltip>
         </template>
 
@@ -37,10 +37,10 @@
               <div class="planner-card__topline">
                 <div class="planner-item__eyebrow">
                   <span class="planner-dot is-schedule" />
-                  <span>{{ formatTimeRange(event.startAt, event.endAt) }}</span>
+                  <span>{{ formatTimeRange(event.startAt, event.endAt, dateLocale) }}</span>
                 </div>
                 <span class="status-chip" :class="{ 'is-complete': event.completed }">
-                  {{ event.completed ? '已完成' : '未完成' }}
+                  {{ event.completed ? t('tasks.completed') : t('tasks.incomplete') }}
                 </span>
               </div>
               <h3>{{ event.title }}</h3>
@@ -54,11 +54,11 @@
                       <n-icon v-if="event.completed" size="14"><CheckIcon /></n-icon>
                     </span>
                     <span class="complete-toggle__label">
-                      {{ event.completed ? '已完成' : '未完成' }}
+                      {{ event.completed ? t('tasks.completed') : t('tasks.incomplete') }}
                     </span>
                   </button>
                 </template>
-                {{ event.completed ? '标记为未完成' : '标记为已完成' }}
+                {{ event.completed ? t('tasks.markIncomplete') : t('tasks.markComplete') }}
               </n-tooltip>
               <n-popconfirm @positive-click="store.deleteEvent(event.id)">
                 <template #trigger>
@@ -70,18 +70,18 @@
                         </template>
                       </n-button>
                     </template>
-                    删除日程
+                    {{ t('tasks.deleteEvent') }}
                   </n-tooltip>
                 </template>
-                删除这条日程？
+                {{ t('tasks.confirmDeleteEvent') }}
               </n-popconfirm>
             </div>
           </article>
         </div>
-        <n-empty v-else description="暂无日程" />
+        <n-empty v-else :description="t('tasks.noEvents')" />
       </SectionCard>
 
-      <SectionCard title="任务">
+      <SectionCard :title="t('tasks.taskTitle')">
         <template #header>
           <n-tooltip trigger="hover">
             <template #trigger>
@@ -91,7 +91,7 @@
                 </template>
               </n-button>
             </template>
-            新增任务
+            {{ t('tasks.createTask') }}
           </n-tooltip>
         </template>
 
@@ -109,7 +109,7 @@
               <div class="planner-card__topline">
                 <div class="planner-item__eyebrow">
                   <span class="planner-dot" :class="`is-${task.status}`" />
-                  <span>{{ task.priority }} · {{ taskTimeLabel(task) }}</span>
+                  <span>{{ priorityLabel(task.priority) }} · {{ taskTimeLabel(task) }}</span>
                 </div>
                 <span class="status-chip" :class="{ 'is-complete': task.status === 'done' }">
                   {{ taskStatusLabel(task.status) }}
@@ -126,11 +126,11 @@
                       <n-icon v-if="task.status === 'done'" size="14"><CheckIcon /></n-icon>
                     </span>
                     <span class="complete-toggle__label">
-                      {{ task.status === 'done' ? '已完成' : '未完成' }}
+                      {{ task.status === 'done' ? t('tasks.completed') : t('tasks.incomplete') }}
                     </span>
                   </button>
                 </template>
-                {{ task.status === 'done' ? '标记为未完成' : '标记为已完成' }}
+                {{ task.status === 'done' ? t('tasks.markIncomplete') : t('tasks.markComplete') }}
               </n-tooltip>
               <n-popconfirm @positive-click="store.deleteTask(task.id)">
                 <template #trigger>
@@ -142,54 +142,54 @@
                         </template>
                       </n-button>
                     </template>
-                    删除任务
+                    {{ t('tasks.deleteTask') }}
                   </n-tooltip>
                 </template>
-                删除这项任务？
+                {{ t('tasks.confirmDeleteTask') }}
               </n-popconfirm>
             </div>
           </article>
         </div>
-        <n-empty v-else description="暂无任务" size="small" />
+        <n-empty v-else :description="t('tasks.noTasks')" size="small" />
       </SectionCard>
     </section>
 
     <n-modal
       v-model:show="eventModalOpen"
       preset="card"
-      title="日程"
+      :title="t('tasks.eventModalTitle')"
       class="editor-modal"
       style="width: min(440px, calc(100vw - 32px))"
     >
       <n-form label-placement="top" class="modal-form">
         <div class="modal-group">
-          <n-form-item label="标题">
-            <n-input v-model:value="eventForm.title" placeholder="例如：产品评审 / 晚间运动" />
+          <n-form-item :label="t('tasks.labels.title')">
+            <n-input v-model:value="eventForm.title" :placeholder="t('tasks.placeholders.event')" />
           </n-form-item>
           <div class="form-row">
-            <n-form-item label="开始时间">
+            <n-form-item :label="t('tasks.labels.startTime')">
               <input v-model="eventForm.startTime" class="native-time-input" type="time" />
             </n-form-item>
-            <n-form-item label="结束时间">
+            <n-form-item :label="t('tasks.labels.endTime')">
               <input v-model="eventForm.endTime" class="native-time-input" type="time" />
             </n-form-item>
           </div>
         </div>
 
         <div class="modal-group">
-          <n-form-item label="备注">
+          <n-form-item :label="t('tasks.labels.notes')">
             <n-input v-model:value="eventForm.notes" type="textarea" :autosize="{ minRows: 4, maxRows: 6 }" />
           </n-form-item>
           <div class="switch-row">
-            <span class="switch-row__label">完成</span>
+            <span class="switch-row__label">{{ t('tasks.labels.done') }}</span>
             <n-switch v-model:value="eventForm.completed" />
           </div>
         </div>
       </n-form>
       <template #footer>
         <div class="modal-footer">
-          <n-button @click="eventModalOpen = false">取消</n-button>
-          <n-button type="primary" @click="submitEvent">{{ eventEditingId ? '保存修改' : '新增日程' }}</n-button>
+          <n-button @click="eventModalOpen = false">{{ t('tasks.cancel') }}</n-button>
+          <n-button type="primary" @click="submitEvent">{{ eventEditingId ? t('tasks.saveChanges') : t('tasks.addEventAction') }}</n-button>
         </div>
       </template>
     </n-modal>
@@ -197,25 +197,25 @@
     <n-modal
       v-model:show="taskModalOpen"
       preset="card"
-      title="任务"
+      :title="t('tasks.taskModalTitle')"
       class="editor-modal"
       style="width: min(440px, calc(100vw - 32px))"
     >
       <n-form label-placement="top" class="modal-form">
         <div class="modal-group">
-          <n-form-item label="标题">
-            <n-input v-model:value="taskForm.title" placeholder="例如：完成日报 / 处理账单" />
+          <n-form-item :label="t('tasks.labels.title')">
+            <n-input v-model:value="taskForm.title" :placeholder="t('tasks.placeholders.task')" />
           </n-form-item>
           <div class="form-row">
-            <n-form-item label="优先级">
+            <n-form-item :label="t('tasks.labels.priority')">
               <n-select v-model:value="taskForm.priority" :options="priorityOptions" />
             </n-form-item>
-            <n-form-item label="状态">
+            <n-form-item :label="t('tasks.labels.status')">
               <n-select v-model:value="taskForm.status" :options="statusOptions" />
             </n-form-item>
           </div>
           <div class="form-row form-row--compact">
-            <n-form-item label="截止时间">
+            <n-form-item :label="t('tasks.labels.dueTime')">
               <input
                 v-model="taskForm.dueTime"
                 class="native-time-input"
@@ -223,22 +223,22 @@
               />
             </n-form-item>
             <div class="switch-field">
-              <span class="switch-row__label">当天事项</span>
+              <span class="switch-row__label">{{ t('tasks.labels.anytime') }}</span>
               <n-switch v-model:value="taskForm.isAnytime" />
             </div>
           </div>
         </div>
 
         <div class="modal-group">
-          <n-form-item label="备注">
+          <n-form-item :label="t('tasks.labels.notes')">
             <n-input v-model:value="taskForm.notes" type="textarea" :autosize="{ minRows: 4, maxRows: 6 }" />
           </n-form-item>
         </div>
       </n-form>
       <template #footer>
         <div class="modal-footer">
-          <n-button @click="taskModalOpen = false">取消</n-button>
-          <n-button type="primary" @click="submitTask">{{ taskEditingId ? '保存修改' : '新增任务' }}</n-button>
+          <n-button @click="taskModalOpen = false">{{ t('tasks.cancel') }}</n-button>
+          <n-button type="primary" @click="submitTask">{{ taskEditingId ? t('tasks.saveChanges') : t('tasks.addTaskAction') }}</n-button>
         </div>
       </template>
     </n-modal>
@@ -247,6 +247,7 @@
 
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue';
+import { useRoute } from 'vue-router';
 import {
   NButton,
   NEmpty,
@@ -261,6 +262,7 @@ import {
   NTooltip,
 } from 'naive-ui';
 
+import { useAppLocale } from '@/composables/useAppLocale';
 import PageHeader from '@/components/PageHeader.vue';
 import SectionCard from '@/components/SectionCard.vue';
 import { CheckIcon, DeleteIcon, PlusIcon } from '@/components/task-icons';
@@ -268,9 +270,12 @@ import { useDailyHubStore } from '@/store/dailyHub';
 import type { Event, Task, TaskPriority, TaskStatus } from '@/types/daily-hub';
 import { formatDateLabel, formatTimeLabel, formatTimeRange } from '@/utils/date';
 
+const route = useRoute();
 const store = useDailyHubStore();
-const todayRecord = computed(() => store.todayRecord);
-const dayLabel = computed(() => formatDateLabel(todayRecord.value.date));
+const { dateLocale, t } = useAppLocale();
+const activeDate = computed(() => (route.params.date as string) || store.todayRecord.date);
+const activeRecord = computed(() => store.recordMap[activeDate.value] ?? store.ensureRecord(activeDate.value));
+const dayLabel = computed(() => formatDateLabel(activeRecord.value.date, dateLocale.value));
 
 function compareDoneLast(
   leftDone: boolean,
@@ -286,13 +291,13 @@ function compareDoneLast(
 }
 
 const sortedEvents = computed(() =>
-  [...todayRecord.value.events].sort((a, b) =>
+  [...activeRecord.value.events].sort((a, b) =>
     compareDoneLast(a.completed, b.completed, a.startAt, b.startAt),
   ),
 );
 
 const sortedTasks = computed(() =>
-  [...todayRecord.value.tasks].sort((a, b) =>
+  [...activeRecord.value.tasks].sort((a, b) =>
     compareDoneLast(taskDone(a), taskDone(b), a.dueAt, b.dueAt),
   ),
 );
@@ -324,16 +329,16 @@ const taskForm = reactive<{
   isAnytime: false,
   notes: '',
 });
-const priorityOptions = [
-  { label: '高', value: 'high' },
-  { label: '中', value: 'medium' },
-  { label: '低', value: 'low' },
-];
-const statusOptions = [
-  { label: '待开始', value: 'todo' },
-  { label: '进行中', value: 'in_progress' },
-  { label: '已完成', value: 'done' },
-];
+const priorityOptions = computed(() => [
+  { label: t('tasks.priorities.high'), value: 'high' },
+  { label: t('tasks.priorities.medium'), value: 'medium' },
+  { label: t('tasks.priorities.low'), value: 'low' },
+]);
+const statusOptions = computed(() => [
+  { label: t('tasks.statuses.todo'), value: 'todo' },
+  { label: t('tasks.statuses.in_progress'), value: 'in_progress' },
+  { label: t('tasks.statuses.done'), value: 'done' },
+]);
 
 function isTodoTask(task: Task) {
   return task.dueAt.endsWith('23:59:00');
@@ -344,13 +349,17 @@ function taskDone(task: Task) {
 }
 
 function taskTimeLabel(task: Task) {
-  return isTodoTask(task) ? '23:59' : formatTimeLabel(task.dueAt);
+  return isTodoTask(task) ? '23:59' : formatTimeLabel(task.dueAt, dateLocale.value);
 }
 
 function taskStatusLabel(status: TaskStatus) {
-  if (status === 'done') return '已完成';
-  if (status === 'in_progress') return '进行中';
-  return '未完成';
+  if (status === 'done') return t('tasks.statuses.done');
+  if (status === 'in_progress') return t('tasks.statuses.in_progress');
+  return t('tasks.incomplete');
+}
+
+function priorityLabel(priority: TaskPriority) {
+  return t(`tasks.priorities.${priority}`);
 }
 
 function resetEventForm() {
@@ -388,7 +397,7 @@ function openEditEvent(event: Event) {
 
 function submitEvent() {
   if (!eventForm.title.trim()) return;
-  const date = todayRecord.value.date;
+  const date = activeRecord.value.date;
   const payload = {
     title: eventForm.title.trim(),
     startAt: `${date}T${eventForm.startTime}:00`,
@@ -427,7 +436,7 @@ function openEditTask(task: Task) {
 
 function submitTask() {
   if (!taskForm.title.trim()) return;
-  const date = todayRecord.value.date;
+  const date = activeRecord.value.date;
   const dueTime = taskForm.isAnytime ? '23:59' : taskForm.dueTime;
   const payload = {
     title: taskForm.title.trim(),

@@ -23,7 +23,7 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/CalendarView.vue'),
       },
       {
-        path: 'tasks',
+        path: 'tasks/:date?',
         name: 'tasks',
         component: () => import('@/views/TasksView.vue'),
       },

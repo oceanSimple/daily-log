@@ -1,9 +1,9 @@
 <template>
   <div class="page-stack">
     <PageHeader
-      eyebrow="Today"
-      title="今天的生活面板"
-      description="把日程、任务、日记和每日总结放在同一个工作台里，先看清今天，再决定往哪里发力。"
+      :eyebrow="t('dashboard.eyebrow')"
+      :title="t('dashboard.title')"
+      :description="t('dashboard.description')"
     >
       <template #meta>
         <n-tag type="success" round>{{ todayLabel }}</n-tag>
@@ -13,73 +13,73 @@
     <section class="stats-grid">
       <SectionCard>
         <div class="stat">
-          <span class="stat__label">今日任务</span>
+          <span class="stat__label">{{ t('dashboard.stats.tasks') }}</span>
           <strong>{{ todayRecord.tasks.length }}</strong>
-          <span class="stat__note">{{ completedTasks }} 已完成</span>
+          <span class="stat__note">{{ completedTasks }} {{ t('dashboard.stats.completed') }}</span>
         </div>
       </SectionCard>
       <SectionCard>
         <div class="stat">
-          <span class="stat__label">今日安排</span>
+          <span class="stat__label">{{ t('dashboard.stats.schedule') }}</span>
           <strong>{{ todayRecord.events.length }}</strong>
-          <span class="stat__note">最晚到 {{ lastEventTime }}</span>
+          <span class="stat__note">{{ t('dashboard.stats.lastUntil') }} {{ lastEventTime }}</span>
         </div>
       </SectionCard>
       <SectionCard>
         <div class="stat">
-          <span class="stat__label">临近截止</span>
+          <span class="stat__label">{{ t('dashboard.stats.upcoming') }}</span>
           <strong>{{ upcomingTasks.length }}</strong>
-          <span class="stat__note">48 小时内需要关注</span>
+          <span class="stat__note">{{ t('dashboard.stats.upcomingNote') }}</span>
         </div>
       </SectionCard>
       <SectionCard>
         <div class="stat">
-          <span class="stat__label">今日状态</span>
+          <span class="stat__label">{{ t('dashboard.stats.mood') }}</span>
           <strong>{{ moodLabel }}</strong>
-          <span class="stat__note">来自每日总结</span>
+          <span class="stat__note">{{ t('dashboard.stats.moodNote') }}</span>
         </div>
       </SectionCard>
     </section>
 
     <section class="two-column">
-      <SectionCard title="今日任务" description="先抓高优先级，再决定其他事情值不值得做。">
+      <SectionCard :title="t('dashboard.sections.tasksTitle')" :description="t('dashboard.sections.tasksDescription')">
         <div class="task-list">
           <div v-for="task in todayRecord.tasks" :key="task.id" class="task-item">
             <div>
               <p class="item-title">{{ task.title }}</p>
-              <p class="item-meta">{{ task.status }} · {{ task.priority }} · {{ formatDateTimeLabel(task.dueAt) }}</p>
+              <p class="item-meta">{{ taskStatusLabel(task.status) }} · {{ priorityLabel(task.priority) }} · {{ formatDateTimeLabel(task.dueAt, dateLocale) }}</p>
             </div>
-            <n-tag :type="taskTagType(task.status)" size="small" round>{{ task.status }}</n-tag>
+            <n-tag :type="taskTagType(task.status)" size="small" round>{{ taskStatusLabel(task.status) }}</n-tag>
           </div>
         </div>
       </SectionCard>
 
-      <SectionCard title="今日日程" description="今天排了什么，以及时间被什么占住了。">
+      <SectionCard :title="t('dashboard.sections.eventsTitle')" :description="t('dashboard.sections.eventsDescription')">
         <div class="event-list">
           <div v-for="event in todayRecord.events" :key="event.id" class="event-item">
             <p class="item-title">{{ event.title }}</p>
-            <p class="item-meta">{{ formatTimeRange(event.startAt, event.endAt) }}</p>
+            <p class="item-meta">{{ formatTimeRange(event.startAt, event.endAt, dateLocale) }}</p>
           </div>
         </div>
       </SectionCard>
     </section>
 
     <section class="two-column">
-      <SectionCard title="日记摘录" description="今日日记先给你一个入口，不用满世界找上下文。">
+      <SectionCard :title="t('dashboard.sections.journalTitle')" :description="t('dashboard.sections.journalDescription')">
         <MarkdownPreview :content="todayRecord.journalEntry.content" />
-        <RouterLink class="inline-link" :to="`/day/${todayRecord.date}`">进入今日页面继续写</RouterLink>
+        <RouterLink class="inline-link" :to="`/day/${todayRecord.date}`">{{ t('dashboard.sections.journalLink') }}</RouterLink>
       </SectionCard>
 
-      <SectionCard title="每日总结" description="让今天收束，而不是只是结束。">
+      <SectionCard :title="t('dashboard.sections.summaryTitle')" :description="t('dashboard.sections.summaryDescription')">
         <div class="summary-list">
           <div>
-            <p class="summary-title">今天做得好的</p>
+            <p class="summary-title">{{ t('dashboard.sections.wins') }}</p>
             <ul>
               <li v-for="item in todayRecord.dailySummary.wins" :key="item">{{ item }}</li>
             </ul>
           </div>
           <div>
-            <p class="summary-title">明日重点</p>
+            <p class="summary-title">{{ t('dashboard.sections.nextFocus') }}</p>
             <ul>
               <li v-for="item in todayRecord.dailySummary.nextFocus" :key="item">{{ item }}</li>
             </ul>
@@ -95,6 +95,7 @@ import { computed } from 'vue';
 import { RouterLink } from 'vue-router';
 import { NTag } from 'naive-ui';
 
+import { useAppLocale } from '@/composables/useAppLocale';
 import MarkdownPreview from '@/components/MarkdownPreview.vue';
 import PageHeader from '@/components/PageHeader.vue';
 import SectionCard from '@/components/SectionCard.vue';
@@ -102,23 +103,32 @@ import { useDailyHubStore } from '@/store/dailyHub';
 import { formatDateLabel, formatDateTimeLabel, formatTimeRange } from '@/utils/date';
 
 const store = useDailyHubStore();
+const { dateLocale, t } = useAppLocale();
 
 const todayRecord = computed(() => store.todayRecord);
 const upcomingTasks = computed(() => store.upcomingTasks);
 const completedTasks = computed(
   () => todayRecord.value.tasks.filter((task) => task.status === 'done').length,
 );
-const moodLabel = computed(() => store.moodLabel(todayRecord.value.dailySummary.mood));
-const todayLabel = computed(() => formatDateLabel(todayRecord.value.date));
+const moodLabel = computed(() => t(`mood.${todayRecord.value.dailySummary.mood}`));
+const todayLabel = computed(() => formatDateLabel(todayRecord.value.date, dateLocale.value));
 const lastEventTime = computed(() => {
   const last = todayRecord.value.events[todayRecord.value.events.length - 1];
-  return last ? formatDateTimeLabel(last.endAt).split(' ')[1] : '无安排';
+  return last ? formatDateTimeLabel(last.endAt, dateLocale.value).split(' ')[1] : t('dashboard.stats.none');
 });
 
 function taskTagType(status: 'todo' | 'in_progress' | 'done') {
   if (status === 'done') return 'success';
   if (status === 'in_progress') return 'warning';
   return 'default';
+}
+
+function taskStatusLabel(status: 'todo' | 'in_progress' | 'done') {
+  return t(`common.taskStatus.${status}`);
+}
+
+function priorityLabel(priority: 'high' | 'medium' | 'low') {
+  return t(`common.priority.${priority}`);
 }
 </script>
 
