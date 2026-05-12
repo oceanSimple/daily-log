@@ -2,8 +2,8 @@
   <div class="page-stack page-stack--calendar">
     <PageHeader
       :eyebrow="t('calendar.eyebrow')"
-      :title="viewMode === 'month' ? monthLabel : t('calendar.title')"
-      :description="viewMode === 'month' ? t('calendar.monthDescription') : t('calendar.description')"
+      :title="viewMode === 'month' ? monthLabel : ''"
+      description=""
     >
       <template #meta>
         <div class="header-meta">
@@ -402,10 +402,10 @@ const MIN_DAY_SPAN = 2;
 const MAX_DAY_SPAN = 7;
 const MAX_SLOTS = 3;
 const tooltipThemeOverrides = {
-  color: 'rgba(255, 255, 255, 0.96)',
-  textColor: '#17212b',
-  borderRadius: '18px',
-  boxShadow: '0 18px 48px rgba(84, 105, 137, 0.16)',
+  color: 'rgba(255, 255, 255, 0.94)',
+  textColor: '#1f2933',
+  borderRadius: '22px',
+  boxShadow: '0 22px 48px rgba(116, 99, 83, 0.14)',
   padding: '0',
 };
 
@@ -913,7 +913,7 @@ function submitTask() {
 }
 
 .page-stack {
-  gap: 24px;
+  gap: 26px;
 }
 
 .page-stack--calendar {
@@ -928,27 +928,32 @@ function submitTask() {
 .header-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 10px;
 }
 
 .view-toggle {
   min-width: 72px;
-  height: 34px;
-  padding: 0 14px;
-  border: 1px solid rgba(255, 255, 255, 0.48);
+  height: 38px;
+  padding: 0 16px;
+  border: 1px solid rgba(255, 255, 255, 0.82);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.56);
   color: var(--muted-text-color);
   font: inherit;
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.82);
 }
 
 .view-toggle.is-active {
-  background: rgba(255, 255, 255, 0.82);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(242, 247, 255, 0.74)),
+    rgba(255, 255, 255, 0.74);
   color: var(--body-text-color);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.96),
+    0 12px 20px rgba(116, 99, 83, 0.08);
 }
 
 .month-shell {
@@ -978,21 +983,21 @@ function submitTask() {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   gap: 12px;
-  padding: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  border-radius: 16px;
+  padding: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  border-radius: 20px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(255, 255, 255, 0.42)),
-    rgba(248, 250, 253, 0.52);
+    var(--glass-panel-warm),
+    rgba(255, 255, 255, 0.44);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.68),
-    0 14px 28px rgba(84, 105, 137, 0.08);
+    inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    0 16px 30px rgba(116, 99, 83, 0.08);
 }
 
 .month-day--muted {
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.48), rgba(255, 255, 255, 0.2)),
-    rgba(240, 244, 249, 0.26);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.58), rgba(250, 247, 242, 0.28)),
+    rgba(246, 242, 237, 0.3);
   color: rgba(23, 33, 43, 0.58);
 }
 
@@ -1100,8 +1105,8 @@ function submitTask() {
   overflow: hidden;
   display: flex;
   align-items: center;
-  padding: 5px 8px;
-  border-radius: 10px;
+  padding: 5px 9px;
+  border-radius: 12px;
   border: 1px solid transparent;
 }
 
@@ -1269,7 +1274,7 @@ function submitTask() {
 
 .calendar-board {
   display: grid;
-  gap: 14px;
+  gap: 16px;
   min-width: 100%;
 }
 
@@ -1293,15 +1298,15 @@ function submitTask() {
   gap: 14px;
   align-content: start;
   min-height: 460px;
-  padding: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  border-radius: 18px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  border-radius: 22px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(248, 251, 255, 0.46)),
-    rgba(242, 247, 252, 0.34);
+    var(--glass-panel-warm),
+    rgba(255, 255, 255, 0.38);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.72),
-    0 14px 30px rgba(84, 105, 137, 0.08);
+    inset 0 1px 0 rgba(255, 255, 255, 0.94),
+    0 16px 32px rgba(116, 99, 83, 0.08);
 }
 
 .board-column--history {
@@ -1326,15 +1331,15 @@ function submitTask() {
   gap: 18px;
   align-content: start;
   padding: 20px 16px 16px;
-  border-left: 1px solid rgba(255, 255, 255, 0.4);
-  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  border-radius: 24px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.36), rgba(255, 255, 255, 0.14)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.56), rgba(255, 255, 255, 0.26)),
     var(--sidebar-background);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.56),
-    0 10px 28px rgba(88, 112, 146, 0.08);
-  backdrop-filter: blur(24px) saturate(150%);
+    inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    0 18px 34px rgba(116, 99, 83, 0.1);
+  backdrop-filter: blur(26px) saturate(138%);
 }
 
 .focus-sidebar__header,
@@ -1372,14 +1377,17 @@ function submitTask() {
 .board-card {
   gap: 10px;
   width: 100%;
-  padding: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.52);
-  border-radius: 16px;
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.84);
+  border-radius: 18px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.74), rgba(255, 255, 255, 0.26)),
-    rgba(246, 249, 252, 0.36);
+    var(--glass-panel),
+    rgba(255, 255, 255, 0.34);
   text-align: left;
   cursor: pointer;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.88),
+    0 10px 20px rgba(116, 99, 83, 0.06);
 }
 
 .board-card.is-overdue {
@@ -1450,13 +1458,13 @@ function submitTask() {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  height: 38px;
-  padding: 0 12px;
-  border: 1px solid rgba(255, 255, 255, 0.44);
+  height: 40px;
+  padding: 0 14px;
+  border: 1px solid rgba(255, 255, 255, 0.82);
   border-radius: 999px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.28)),
-    rgba(245, 248, 252, 0.38);
+    var(--glass-panel),
+    rgba(255, 255, 255, 0.38);
   color: var(--muted-text-color);
   font: inherit;
   font-size: 13px;
@@ -1498,11 +1506,16 @@ function submitTask() {
   width: 100%;
   min-height: 40px;
   padding: 0 12px;
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(215, 204, 193, 0.58);
+  border-radius: 16px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(248, 245, 241, 0.56)),
+    rgba(248, 245, 241, 0.46);
   color: var(--body-text-color);
   font: inherit;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    0 2px 8px rgba(116, 99, 83, 0.06);
 }
 
 .switch-field {

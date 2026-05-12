@@ -85,12 +85,12 @@ const { t } = useAppLocale();
   gap: 18px;
   height: 100%;
   min-height: 0;
-  padding: 24px 18px 18px;
-  border-right: 1px solid rgba(255, 255, 255, 0.4);
+  padding: 26px 18px 18px;
+  border-right: 1px solid rgba(255, 255, 255, 0.72);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.36), rgba(255, 255, 255, 0.14)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.54), rgba(255, 255, 255, 0.24)),
     var(--sidebar-background);
-  backdrop-filter: blur(28px) saturate(150%);
+  backdrop-filter: blur(28px) saturate(138%);
   overflow-y: auto;
   transition: padding 0.18s ease;
 }
@@ -121,17 +121,17 @@ const { t } = useAppLocale();
   width: 48px;
   height: 48px;
   place-items: center;
-  border: 1px solid rgba(255, 255, 255, 0.36);
-  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 16px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0.04)),
-    linear-gradient(135deg, rgba(6, 122, 114, 0.9), rgba(46, 121, 220, 0.84));
+    linear-gradient(180deg, rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0.08)),
+    linear-gradient(135deg, #6ea390, #6d90d6);
   color: #f7fbff;
   font-size: 14px;
   font-weight: 700;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.34),
-    0 12px 24px rgba(49, 104, 167, 0.18);
+    inset 0 1px 0 rgba(255, 255, 255, 0.46),
+    0 16px 30px rgba(109, 128, 166, 0.2);
 }
 
 .brand-name {
@@ -152,11 +152,11 @@ const { t } = useAppLocale();
   display: flex;
   gap: 12px;
   align-items: center;
-  padding: 12px 14px;
+  padding: 13px 14px;
   border: 1px solid transparent;
-  border-radius: 16px;
+  border-radius: 18px;
   color: inherit;
-  background: transparent;
+  background: rgba(255, 255, 255, 0.08);
   cursor: pointer;
   transition:
     background-color 0.18s ease,
@@ -177,24 +177,24 @@ const { t } = useAppLocale();
 
 .nav-item:hover,
 .settings-entry:hover {
-  border-color: rgba(255, 255, 255, 0.42);
+  border-color: rgba(255, 255, 255, 0.72);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.48), rgba(255, 255, 255, 0.18)),
-    rgba(242, 247, 253, 0.32);
+    var(--glass-panel),
+    rgba(252, 249, 245, 0.42);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.48),
-    0 12px 24px rgba(90, 118, 156, 0.08);
+    inset 0 1px 0 rgba(255, 255, 255, 0.82),
+    0 14px 28px rgba(116, 99, 83, 0.1);
   transform: translateX(1px);
 }
 
 .nav-item.is-active {
-  border-color: rgba(255, 255, 255, 0.56);
+  border-color: rgba(255, 255, 255, 0.84);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.2)),
-    linear-gradient(135deg, rgba(191, 240, 233, 0.38), rgba(226, 238, 255, 0.28));
+    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.38)),
+    linear-gradient(135deg, rgba(227, 240, 236, 0.78), rgba(233, 239, 251, 0.64));
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.56),
-    0 14px 28px rgba(96, 131, 173, 0.12);
+    inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    0 18px 32px rgba(116, 99, 83, 0.12);
 }
 
 .nav-icon {

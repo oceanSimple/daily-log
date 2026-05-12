@@ -135,30 +135,33 @@ function priorityLabel(priority: 'high' | 'medium' | 'low') {
 <style scoped>
 .page-stack {
   display: grid;
-  gap: 24px;
+  gap: 26px;
 }
 
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
+  gap: 18px;
 }
 
 .stat {
   display: grid;
-  gap: 8px;
-  padding: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  border-radius: 18px;
+  gap: 10px;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  border-radius: 22px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.36), rgba(255, 255, 255, 0.12)),
-    rgba(244, 248, 252, 0.28);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.56);
+    var(--glass-panel-warm),
+    rgba(255, 255, 255, 0.44);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.86),
+    0 18px 36px rgba(116, 99, 83, 0.08);
 }
 
 .stat strong {
-  font-size: 30px;
+  font-size: 32px;
   line-height: 1;
+  font-weight: 760;
 }
 
 .stat__label,
@@ -181,7 +184,7 @@ function priorityLabel(priority: 'high' | 'medium' | 'low') {
 .two-column {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+  gap: 18px;
 }
 
 .task-list,
@@ -197,24 +200,27 @@ function priorityLabel(priority: 'high' | 'medium' | 'low') {
   gap: 12px;
   justify-content: space-between;
   align-items: flex-start;
-  padding: 14px 16px;
-  border: 1px solid rgba(255, 255, 255, 0.34);
-  border-radius: 16px;
+  padding: 15px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 18px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.1)),
-    rgba(244, 248, 252, 0.22);
+    var(--glass-panel-soft),
+    rgba(255, 255, 255, 0.28);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.78),
+    0 12px 22px rgba(116, 99, 83, 0.06);
 }
 
 .item-title,
 .summary-title {
   margin: 0 0 6px;
-  font-weight: 600;
+  font-weight: 650;
 }
 
 .inline-link {
   color: var(--accent-text-color);
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 650;
 }
 
 ul {

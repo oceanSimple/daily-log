@@ -22,16 +22,27 @@ defineProps<{
 
 <style scoped>
 .section-card {
-  padding: 22px;
-  border: 1px solid var(--border-color);
-  border-radius: 20px;
+  position: relative;
+  padding: 24px;
+  border: var(--glass-border);
+  border-radius: var(--radius-card);
   background:
-    var(--glass-highlight),
+    var(--glass-panel-warm),
     var(--panel-color);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.62),
+    inset 0 1px 0 rgba(255, 255, 255, 0.88),
     var(--shadow-soft);
-  backdrop-filter: blur(24px) saturate(150%);
+  backdrop-filter: blur(26px) saturate(135%);
+}
+
+.section-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.32), transparent 42%);
+  opacity: 0.8;
 }
 
 .section-card__header {
@@ -43,6 +54,7 @@ defineProps<{
 }
 
 .section-card__body {
+  position: relative;
   display: grid;
   gap: 16px;
 }
@@ -54,7 +66,8 @@ p {
 
 h2 {
   color: var(--body-text-color);
-  font-size: 17px;
+  font-size: 18px;
+  font-weight: 700;
   line-height: 1.3;
 }
 

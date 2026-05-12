@@ -9,8 +9,7 @@ const routes: RouteRecordRaw[] = [
     children: [
       {
         path: '',
-        name: 'dashboard',
-        component: () => import('@/views/DashboardView.vue'),
+        redirect: '/calendar',
       },
       {
         path: 'day/:date',

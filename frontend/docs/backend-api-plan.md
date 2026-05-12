@@ -1,17 +1,18 @@
-# Daily Hub Frontend API Needs
+# Daily Hub Backend Contract
 
-这份文档只描述前端 MVP 需要后端提供什么能力，方便后续 Go 项目直接接手。它不绑定具体数据库、鉴权方案或 HTTP 细节。
+这份文档描述当前前端已经固定下来的 REST 路由、资源字段与读写能力。目标是让前端先通过统一 API 适配层与“内置假后端”对接，未来真实后端只需遵守这里的契约，前端就可以只改 `API_BASE_URL` / host / port 直接切换。
 
 ## 1. 核心资源
 
 ### DayRecord
 - `date`
 - `journalEntry`
+- `logEntries[]`
 - `dailySummary`
 - `tasks[]`
 - `events[]`
 
-DayRecord 是按天聚合的核心资源。前端的 dashboard、day log、journal archive 都依赖它。
+DayRecord 是按天聚合的核心资源。Dashboard、Day Log、Journal、Calendar 都依赖它。
 
 ### Task
 - `id`
@@ -21,6 +22,7 @@ DayRecord 是按天聚合的核心资源。前端的 dashboard、day log、journ
 - `dueAt`
 - `date`
 - `notes?`
+- `isFocus?`
 
 ### Event
 - `id`
@@ -28,12 +30,24 @@ DayRecord 是按天聚合的核心资源。前端的 dashboard、day log、journ
 - `startAt`
 - `endAt`
 - `date`
+- `completed`
 - `notes?`
+- `isFocus?`
 
 ### JournalEntry
 - `date`
 - `title`
 - `content`
+
+### LogEntry
+- `id`
+- `date`
+- `time`
+- `title`
+- `notes?`
+- `isHighlight`
+- `sourceType` (`task | event`)
+- `sourceId?`
 
 ### DailySummary
 - `date`
@@ -43,67 +57,94 @@ DayRecord 是按天聚合的核心资源。前端的 dashboard、day log、journ
 - `nextFocus[]`
 - `content`
 
-## 2. 页面对应的数据需求
+## 2. REST 路由
 
 ### Dashboard
-需要：
-- 今日 `DayRecord`
-- 未来日期范围内的未完成任务
-- 本周事件概览
+- `GET /api/dashboard`
+  - 返回聚合总览数据：
+    - `todayRecord`
+    - `upcomingTasks`
+    - `currentWeekEvents`
 
-### Day Log
-需要：
-- 指定 `date` 的完整 `DayRecord`
-
-### Calendar
-需要：
-- 指定日期范围内的 `Event[]`
-- 最好支持按周返回，便于直接渲染周视图
+### Day Records
+- `GET /api/day-records`
+  - 支持查询参数：
+    - `from`
+    - `to`
+- `GET /api/day-records/:date`
 
 ### Tasks
-需要：
-- 日期范围内 `Task[]`
-- 支持按状态、截止时间、所属日期筛选
+- `GET /api/tasks`
+  - 支持查询参数：
+    - `from`
+    - `to`
+    - `status`
+- `POST /api/tasks`
+- `PATCH /api/tasks/:id`
+- `DELETE /api/tasks/:id`
 
-### Journal Archive
-需要：
-- 按日期倒序返回 `DayRecord` 摘要列表
-- 最少包含 `date`、日记标题、总结状态、明日重点
+### Events
+- `GET /api/events`
+  - 支持查询参数：
+    - `from`
+    - `to`
+- `POST /api/events`
+- `PATCH /api/events/:id`
+- `DELETE /api/events/:id`
 
-## 3. 典型读写动作
+### Journal Entries
+- `PATCH /api/journal-entries/:date`
 
-### 读取
-- 获取某一天的完整记录
-- 获取某个日期范围内的任务
-- 获取某个日期范围内的事件
-- 获取归档列表
-- 获取今日总览数据
+### Daily Summaries
+- `PATCH /api/daily-summaries/:date`
 
-### 写入
-- 新增任务
-- 更新任务状态、优先级、截止时间、备注
-- 删除任务
-- 更新某日日记标题与 Markdown 内容
-- 更新某日总结正文和结构化字段
-- 新增或更新某日事件
-- 删除事件
+### Log Entries
+- `POST /api/log-entries`
+- `PATCH /api/log-entries/:id`
+- `DELETE /api/log-entries/:id`
 
-## 4. 建议的接口分组
+## 3. 页面数据覆盖
 
-前端更关心能力边界，建议后端至少能覆盖这些资源组：
+### Dashboard
+- `GET /api/dashboard`
 
-- `day-records`
-- `tasks`
-- `events`
-- `journal-entries`
-- `daily-summaries`
-- `dashboard`
+### Day Log
+- `GET /api/day-records/:date`
+- `PATCH /api/journal-entries/:date`
+- `PATCH /api/daily-summaries/:date`
+- `POST /api/log-entries`
+- `PATCH /api/log-entries/:id`
+- `DELETE /api/log-entries/:id`
 
-其中 `dashboard` 可以是聚合接口，也可以由前端拼装；只要响应速度和前端使用成本可接受即可。
+### Calendar
+- `GET /api/day-records?from=...&to=...`
+  - 或 `GET /api/events?from=...&to=...` 与 `GET /api/tasks?...`
+- `POST /api/events`
+- `PATCH /api/events/:id`
+- `DELETE /api/events/:id`
+- `POST /api/tasks`
+- `PATCH /api/tasks/:id`
 
-## 5. 目前前端默认假设
+### Tasks
+- `GET /api/day-records?from=...&to=...`
+  - 或 `GET /api/tasks?...`
+- `POST /api/tasks`
+- `PATCH /api/tasks/:id`
+- `DELETE /api/tasks/:id`
+- `POST /api/events`
+- `PATCH /api/events/:id`
+- `DELETE /api/events/:id`
 
-- 单用户，不涉及账号体系和数据共享
+### Journal
+- `GET /api/day-records?from=...&to=...`
+
+## 4. 前端对后端的固定假设
+
+- 单用户，不涉及鉴权与共享
 - 日期主键使用 `YYYY-MM-DD`
+- 时间字段使用 ISO 风格字符串
 - 日记与总结正文均为 Markdown 字符串
-- 任务系统保持轻量，不需要子任务、标签和复杂重复规则
+- 写接口采用资源细粒度，不使用整天整包覆盖
+- 当前前端通过以下环境变量切换：
+  - `VITE_API_MODE=mock|http`
+  - `VITE_API_BASE_URL=http://<host>:<port>`

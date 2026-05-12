@@ -1,7 +1,20 @@
 import { computed, ref } from 'vue';
 import { defineStore } from 'pinia';
 
-import { mockRecords } from '@/data/mockRecords';
+import {
+  createEvent as createEventRequest,
+  createLogEntry as createLogEntryRequest,
+  createTask as createTaskRequest,
+  deleteEvent as deleteEventRequest,
+  deleteLogEntry as deleteLogEntryRequest,
+  deleteTask as deleteTaskRequest,
+  listDayRecords,
+  updateDailySummary as updateDailySummaryRequest,
+  updateEvent as updateEventRequest,
+  updateJournalEntry as updateJournalEntryRequest,
+  updateLogEntry as updateLogEntryRequest,
+  updateTask as updateTaskRequest,
+} from '@/api/services';
 import type {
   CalendarBoardItem,
   DailySummary,
@@ -15,7 +28,9 @@ import type {
 import { formatTimeLabel, formatTimeRange, startOfWeek, toDateKey } from '@/utils/date';
 
 export const useDailyHubStore = defineStore('dailyHub', () => {
-  const records = ref(mockRecords);
+  const records = ref<DayRecord[]>([]);
+  const isLoaded = ref(false);
+  const isLoading = ref(false);
 
   function createEmptyDayRecord(date: string): DayRecord {
     return {
@@ -53,8 +68,21 @@ export const useDailyHubStore = defineStore('dailyHub', () => {
     return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   }
 
-  function createLogEntryId() {
-    return `log-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  async function initialize() {
+    if (isLoading.value || isLoaded.value) return;
+    isLoading.value = true;
+    try {
+      const result = await listDayRecords();
+      records.value = result;
+      isLoaded.value = true;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  async function refreshRecords() {
+    records.value = await listDayRecords();
+    isLoaded.value = true;
   }
 
   const recordMap = computed(() =>
@@ -127,7 +155,7 @@ export const useDailyHubStore = defineStore('dailyHub', () => {
     );
   }
 
-  function availableLogSources(date: string, includeUsed = false): LogSourceOption[] {
+  function availableLogSources(date: string, _includeUsed = false): LogSourceOption[] {
     const record = ensureRecord(date);
     const usageSet = logSourceUsageSet(record);
     const sources: LogSourceOption[] = [
@@ -153,9 +181,10 @@ export const useDailyHubStore = defineStore('dailyHub', () => {
       })),
     ];
 
-    return sources
-      .filter((source) => includeUsed || !source.isUsed)
-      .sort((left, right) => left.time.localeCompare(right.time));
+    return sources.sort((left, right) => {
+      if (left.isUsed !== right.isUsed) return left.isUsed ? 1 : -1;
+      return left.time.localeCompare(right.time);
+    });
   }
 
   function buildCalendarItem(item: Event, kind: 'event', locale?: string, nowIso?: string): CalendarBoardItem;
@@ -272,43 +301,36 @@ export const useDailyHubStore = defineStore('dailyHub', () => {
   }
 
   function addTask(input: Omit<Task, 'id'>) {
-    const record = ensureRecord(input.date);
-    const task: Task = {
-      isFocus: false,
-      ...input,
-      id: createId('task'),
-    };
-
-    record.tasks = [...record.tasks, task].sort((a, b) => a.dueAt.localeCompare(b.dueAt));
-    records.value = [...records.value];
-    return task;
+    return createTaskRequest(input).then((task) => {
+      const record = ensureRecord(task.date);
+      record.tasks = [...record.tasks, task].sort((a, b) => a.dueAt.localeCompare(b.dueAt));
+      records.value = [...records.value];
+      return task;
+    });
   }
 
-  function updateTask(taskId: string, input: Omit<Task, 'id'>) {
+  async function updateTask(taskId: string, input: Omit<Task, 'id'>) {
+    const updatedTask = await updateTaskRequest(taskId, input);
     const sourceRecord = records.value.find((record) => record.tasks.some((task) => task.id === taskId));
     if (!sourceRecord) return;
-
     const taskIndex = sourceRecord.tasks.findIndex((task) => task.id === taskId);
     if (taskIndex < 0) return;
-
     const existing = sourceRecord.tasks[taskIndex];
 
-    if (existing.date !== input.date) {
+    if (existing.date !== updatedTask.date) {
       sourceRecord.tasks = sourceRecord.tasks.filter((task) => task.id !== taskId);
-      const targetRecord = ensureRecord(input.date);
-      targetRecord.tasks = [
-        ...targetRecord.tasks,
-        { ...existing, ...input, id: taskId },
-      ].sort((a, b) => a.dueAt.localeCompare(b.dueAt));
+      const targetRecord = ensureRecord(updatedTask.date);
+      targetRecord.tasks = [...targetRecord.tasks, updatedTask].sort((a, b) => a.dueAt.localeCompare(b.dueAt));
     } else {
-      sourceRecord.tasks[taskIndex] = { ...existing, ...input, id: taskId };
+      sourceRecord.tasks[taskIndex] = updatedTask;
       sourceRecord.tasks = [...sourceRecord.tasks].sort((a, b) => a.dueAt.localeCompare(b.dueAt));
     }
 
     records.value = [...records.value];
   }
 
-  function deleteTask(taskId: string) {
+  async function deleteTask(taskId: string) {
+    await deleteTaskRequest(taskId);
     const sourceRecord = records.value.find((record) => record.tasks.some((task) => task.id === taskId));
     if (!sourceRecord) return;
     sourceRecord.tasks = sourceRecord.tasks.filter((task) => task.id !== taskId);
@@ -316,43 +338,36 @@ export const useDailyHubStore = defineStore('dailyHub', () => {
   }
 
   function addEvent(input: Omit<Event, 'id'>) {
-    const record = ensureRecord(input.date);
-    const event: Event = {
-      isFocus: false,
-      ...input,
-      id: createId('event'),
-    };
-
-    record.events = [...record.events, event].sort((a, b) => a.startAt.localeCompare(b.startAt));
-    records.value = [...records.value];
-    return event;
+    return createEventRequest(input).then((event) => {
+      const record = ensureRecord(event.date);
+      record.events = [...record.events, event].sort((a, b) => a.startAt.localeCompare(b.startAt));
+      records.value = [...records.value];
+      return event;
+    });
   }
 
-  function updateEvent(eventId: string, input: Omit<Event, 'id'>) {
+  async function updateEvent(eventId: string, input: Omit<Event, 'id'>) {
+    const updatedEvent = await updateEventRequest(eventId, input);
     const sourceRecord = records.value.find((record) => record.events.some((event) => event.id === eventId));
     if (!sourceRecord) return;
-
     const eventIndex = sourceRecord.events.findIndex((event) => event.id === eventId);
     if (eventIndex < 0) return;
-
     const existing = sourceRecord.events[eventIndex];
 
-    if (existing.date !== input.date) {
+    if (existing.date !== updatedEvent.date) {
       sourceRecord.events = sourceRecord.events.filter((event) => event.id !== eventId);
-      const targetRecord = ensureRecord(input.date);
-      targetRecord.events = [
-        ...targetRecord.events,
-        { ...existing, ...input, id: eventId },
-      ].sort((a, b) => a.startAt.localeCompare(b.startAt));
+      const targetRecord = ensureRecord(updatedEvent.date);
+      targetRecord.events = [...targetRecord.events, updatedEvent].sort((a, b) => a.startAt.localeCompare(b.startAt));
     } else {
-      sourceRecord.events[eventIndex] = { ...existing, ...input, id: eventId };
+      sourceRecord.events[eventIndex] = updatedEvent;
       sourceRecord.events = [...sourceRecord.events].sort((a, b) => a.startAt.localeCompare(b.startAt));
     }
 
     records.value = [...records.value];
   }
 
-  function deleteEvent(eventId: string) {
+  async function deleteEvent(eventId: string) {
+    await deleteEventRequest(eventId);
     const sourceRecord = records.value.find((record) => record.events.some((event) => event.id === eventId));
     if (!sourceRecord) return;
     sourceRecord.events = sourceRecord.events.filter((event) => event.id !== eventId);
@@ -384,28 +399,27 @@ export const useDailyHubStore = defineStore('dailyHub', () => {
   }
 
   function addLogEntry(input: Omit<LogEntry, 'id'>) {
-    const record = ensureRecord(input.date);
-    const entry: LogEntry = {
-      ...input,
-      id: createLogEntryId(),
-    };
-
-    record.logEntries = sortLogEntries([...(record.logEntries ?? []), entry]);
-    records.value = [...records.value];
-    return entry;
+    return createLogEntryRequest(input).then((entry) => {
+      const record = ensureRecord(entry.date);
+      record.logEntries = sortLogEntries([...(record.logEntries ?? []), entry]);
+      records.value = [...records.value];
+      return entry;
+    });
   }
 
-  function updateLogEntry(entryId: string, input: Omit<LogEntry, 'id'>) {
+  async function updateLogEntry(entryId: string, input: Omit<LogEntry, 'id'>) {
+    const updatedEntry = await updateLogEntryRequest(entryId, input);
     const record = records.value.find((item) => (item.logEntries ?? []).some((entry) => entry.id === entryId));
     if (!record) return;
 
     record.logEntries = sortLogEntries(
-      (record.logEntries ?? []).map((entry) => (entry.id === entryId ? { ...entry, ...input, id: entryId } : entry)),
+      (record.logEntries ?? []).map((entry) => (entry.id === entryId ? updatedEntry : entry)),
     );
     records.value = [...records.value];
   }
 
-  function deleteLogEntry(entryId: string) {
+  async function deleteLogEntry(entryId: string) {
+    await deleteLogEntryRequest(entryId);
     const record = records.value.find((item) => (item.logEntries ?? []).some((entry) => entry.id === entryId));
     if (!record) return;
 
@@ -413,28 +427,26 @@ export const useDailyHubStore = defineStore('dailyHub', () => {
     records.value = [...records.value];
   }
 
-  function updateJournalEntry(date: string, input: Pick<JournalEntry, 'title' | 'content'>) {
+  async function updateJournalEntry(date: string, input: Pick<JournalEntry, 'title' | 'content'>) {
+    const updatedEntry = await updateJournalEntryRequest(date, input);
     const record = ensureRecord(date);
-    record.journalEntry = {
-      ...record.journalEntry,
-      ...input,
-      date,
-    };
+    record.journalEntry = updatedEntry;
     records.value = [...records.value];
   }
 
-  function updateDailySummary(date: string, input: Partial<Omit<DailySummary, 'date'>>) {
+  async function updateDailySummary(date: string, input: Partial<Omit<DailySummary, 'date'>>) {
+    const updatedSummary = await updateDailySummaryRequest(date, input);
     const record = ensureRecord(date);
-    record.dailySummary = {
-      ...record.dailySummary,
-      ...input,
-      date,
-    };
+    record.dailySummary = updatedSummary;
     records.value = [...records.value];
   }
 
   return {
     records,
+    isLoaded,
+    isLoading,
+    initialize,
+    refreshRecords,
     todayKey,
     recordMap,
     todayRecord,

@@ -18,7 +18,7 @@ const html = computed(() => renderMarkdown(props.content));
 <style scoped>
 .markdown-preview {
   color: var(--body-text-color);
-  line-height: 1.8;
+  line-height: 1.82;
 }
 
 .markdown-preview :deep(h1),
@@ -29,11 +29,13 @@ const html = computed(() => renderMarkdown(props.content));
 }
 
 .markdown-preview :deep(h1) {
-  font-size: 22px;
+  font-size: 24px;
+  line-height: 1.2;
 }
 
 .markdown-preview :deep(h2) {
   font-size: 18px;
+  line-height: 1.3;
 }
 
 .markdown-preview :deep(ul) {
@@ -42,8 +44,8 @@ const html = computed(() => renderMarkdown(props.content));
 
 .markdown-preview :deep(code) {
   padding: 2px 6px;
-  border-radius: 6px;
-  background: #eef2ff;
+  border-radius: 8px;
+  background: rgba(233, 239, 250, 0.86);
   font-family:
     'SFMono-Regular', ui-monospace, 'Cascadia Code', 'Source Code Pro', monospace;
   font-size: 0.92em;

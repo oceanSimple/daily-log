@@ -57,10 +57,7 @@
               v-for="entry in logEntries"
               :key="entry.id"
               class="entry-card"
-              :class="[
-                `is-${entry.sourceType}`,
-                { 'is-highlight': entry.isHighlight },
-              ]"
+              :class="[`is-${entry.sourceType}`, { 'is-highlight': entry.isHighlight }]"
               role="button"
               tabindex="0"
               @click="openEditEntry(entry)"
@@ -97,44 +94,44 @@
       preset="card"
       :title="editingEntryId ? t('dayLog.modal.editTitle') : t('dayLog.modal.createTitle')"
       class="editor-modal"
-      style="width: min(520px, calc(100vw - 32px))"
+      style="width: min(720px, calc(100vw - 32px))"
     >
       <n-form label-placement="top" class="modal-form">
-        <div class="form-row">
-          <n-form-item :label="t('dayLog.labels.time')">
+        <div class="inline-field">
+          <label class="inline-field__label">{{ t('dayLog.labels.title') }}</label>
+          <div class="inline-field__control">
+            <n-input v-model:value="entryForm.title" />
+          </div>
+        </div>
+
+        <div class="form-row form-row--compact">
+          <n-form-item class="form-item--time" :label="t('dayLog.labels.time')">
             <input v-model="entryForm.time" class="native-time-input" type="time" />
           </n-form-item>
-          <n-form-item :label="t('dayLog.labels.kind')">
+
+          <n-form-item class="form-item--kind" :label="t('dayLog.labels.kind')">
             <n-select
               v-model:value="entryForm.sourceType"
               :options="kindOptions"
               :disabled="Boolean(selectedSourceId)"
             />
           </n-form-item>
-          <n-form-item :label="t('dayLog.labels.source')">
-            <n-select
-              v-model:value="selectedSourceId"
-              :options="sourceOptions"
-              clearable
-              @update:value="handleSourceChange"
-            />
-          </n-form-item>
         </div>
 
-        <div class="switch-row">
-          <span class="switch-row__label">{{ t('dayLog.labels.showUsed') }}</span>
-          <n-switch v-model:value="showUsedSources" />
-        </div>
-
-        <n-form-item :label="t('dayLog.labels.title')">
-          <n-input v-model:value="entryForm.title" :placeholder="t('dayLog.placeholders.entryTitle')" />
+        <n-form-item :label="t('dayLog.labels.source')">
+          <n-select
+            v-model:value="selectedSourceId"
+            :options="sourceOptions"
+            clearable
+            :render-label="renderSourceOption"
+            @update:value="handleSourceChange"
+          />
         </n-form-item>
 
         <n-form-item :label="t('dayLog.labels.notes')">
           <n-input
             v-model:value="entryForm.notes"
             type="textarea"
-            :placeholder="t('dayLog.placeholders.notes')"
             :autosize="{ minRows: 4, maxRows: 7 }"
           />
         </n-form-item>
@@ -156,7 +153,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from 'vue';
+import { computed, h, reactive, ref, watch } from 'vue';
+import type { SelectRenderLabel } from 'naive-ui';
 import {
   NButton,
   NEmpty,
@@ -178,7 +176,7 @@ import MarkdownPreview from '@/components/MarkdownPreview.vue';
 import PageHeader from '@/components/PageHeader.vue';
 import SectionCard from '@/components/SectionCard.vue';
 import { useDailyHubStore } from '@/store/dailyHub';
-import type { LogEntry, LogEntrySourceType } from '@/types/daily-hub';
+import type { LogEntry, LogEntrySourceType, LogSourceOption } from '@/types/daily-hub';
 import { formatDateLabel } from '@/utils/date';
 
 const route = useRoute();
@@ -193,7 +191,6 @@ const allSources = computed(() => store.availableLogSources(dateKey.value, true)
 const entryModalOpen = ref(false);
 const editingEntryId = ref<string | null>(null);
 const selectedSourceId = ref<string | null>(null);
-const showUsedSources = ref(false);
 const journalEditing = ref(false);
 
 const entryForm = reactive({
@@ -210,9 +207,10 @@ const journalDraft = reactive({
 });
 
 const sourceOptions = computed(() =>
-  store.availableLogSources(dateKey.value, showUsedSources.value).map((source) => ({
-    label: `${source.timeLabel} · ${source.title}${source.isUsed ? ` · ${t('dayLog.sourceUsed')}` : ''}`,
+  allSources.value.map((source) => ({
+    label: `${source.timeLabel} · ${source.title}`,
     value: source.id,
+    raw: source,
   })),
 );
 
@@ -220,6 +218,22 @@ const kindOptions = computed(() => [
   { label: t('dayLog.cards.task'), value: 'task' },
   { label: t('dayLog.cards.event'), value: 'event' },
 ]);
+
+const renderSourceOption: SelectRenderLabel = (option) => {
+  const source = option.raw as LogSourceOption | undefined;
+  if (!source) return option.label as string;
+
+  return h(
+    'div',
+    {
+      class: ['source-option', source.isUsed ? 'is-used' : ''],
+    },
+    [
+      h('span', { class: 'source-option__time' }, source.timeLabel),
+      h('span', { class: 'source-option__title' }, source.title),
+    ],
+  );
+};
 
 watch(
   record,
@@ -232,7 +246,6 @@ watch(
 function resetEntryForm() {
   editingEntryId.value = null;
   selectedSourceId.value = null;
-  showUsedSources.value = false;
   entryForm.time = '09:00';
   entryForm.title = '';
   entryForm.notes = '';
@@ -255,7 +268,6 @@ function openEditEntry(entry: LogEntry) {
   entryForm.sourceType = entry.sourceType;
   entryForm.sourceId = entry.sourceId;
   selectedSourceId.value = entry.sourceType && entry.sourceId ? `${entry.sourceType}:${entry.sourceId}` : null;
-  showUsedSources.value = true;
   entryModalOpen.value = true;
 }
 
@@ -321,68 +333,64 @@ function cancelJournalEdit() {
 .side-column,
 .entry-list,
 .entry-card,
-.editor-stack,
-.source-list,
-.source-card,
-.summary-grid {
+.editor-stack {
   display: grid;
 }
 
 .page-stack {
-  gap: 24px;
+  gap: 26px;
 }
 
 .content-grid {
   grid-template-columns: minmax(0, 1.2fr) minmax(340px, 0.9fr);
-  gap: 18px;
+  gap: 20px;
   align-items: start;
 }
 
 .main-column,
 .side-column,
 .entry-list,
-.editor-stack,
-.source-list {
+.editor-stack {
   gap: 16px;
 }
 
 .entry-card {
   gap: 10px;
-  padding: 14px 16px;
-  border: 1px solid rgba(255, 255, 255, 0.46);
-  border-radius: 16px;
+  padding: 16px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.76);
+  border-radius: 20px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.56), rgba(255, 255, 255, 0.18)),
-    rgba(246, 249, 252, 0.24);
+    var(--glass-panel),
+    rgba(255, 255, 255, 0.36);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.7),
-    0 10px 30px rgba(103, 122, 148, 0.08);
-  backdrop-filter: blur(20px) saturate(150%);
+    inset 0 1px 0 rgba(255, 255, 255, 0.88),
+    0 16px 30px rgba(116, 99, 83, 0.08);
+  backdrop-filter: blur(22px) saturate(135%);
   cursor: pointer;
 }
 
 .entry-card.is-task {
   border-color: rgba(116, 165, 255, 0.28);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.58), rgba(232, 241, 255, 0.22)),
-    rgba(236, 244, 255, 0.26);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(235, 244, 255, 0.54)),
+    rgba(236, 244, 255, 0.38);
 }
 
 .entry-card.is-event {
   border-color: rgba(108, 195, 163, 0.28);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.58), rgba(232, 248, 242, 0.22)),
-    rgba(234, 247, 242, 0.26);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(234, 248, 242, 0.54)),
+    rgba(234, 247, 242, 0.38);
 }
 
 .entry-card.is-highlight {
   border-color: rgba(243, 186, 74, 0.38);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.72),
-    0 12px 32px rgba(243, 186, 74, 0.1);
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 18px 34px rgba(208, 160, 79, 0.12);
   background:
-    linear-gradient(180deg, rgba(255, 252, 245, 0.68), rgba(255, 241, 214, 0.2)),
-    rgba(255, 246, 229, 0.28);
+    linear-gradient(180deg, rgba(255, 252, 245, 0.88), rgba(255, 241, 214, 0.34)),
+    rgba(255, 246, 229, 0.38);
 }
 
 .entry-card__topline,
@@ -390,95 +398,56 @@ function cancelJournalEdit() {
 .entry-card__actions,
 .editor-actions,
 .modal-footer,
-.source-card__topline,
-.source-tags,
 .meta-stack,
-.switch-row,
-.form-row {
+.switch-row {
   display: flex;
   gap: 12px;
   align-items: center;
 }
 
 .entry-card__topline,
-.source-card__topline,
 .entry-card__primary {
   justify-content: space-between;
 }
 
-.source-tags,
 .meta-stack {
   flex-wrap: wrap;
 }
 
-.entry-time,
-.source-time {
+.entry-time {
   color: var(--muted-text-color);
-  font-size: 13px;
+  font-size: 12px;
+  font-weight: 650;
   font-variant-numeric: tabular-nums;
 }
 
 h3,
-.entry-notes,
-.source-title,
-.source-notes,
-.summary-heading {
+.entry-notes {
   margin: 0;
-}
-
-h3,
-.source-title {
-  line-height: 1.5;
 }
 
 h3 {
   min-width: 0;
   font-size: 16px;
   font-weight: 650;
+  line-height: 1.5;
 }
 
 .journal-preview-surface {
   min-height: 520px;
-  padding: 8px 4px;
+  padding: 10px 8px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.12));
   cursor: text;
 }
 
-.entry-notes,
-.source-notes {
+.entry-notes {
   color: var(--muted-text-color);
   line-height: 1.6;
 }
 
 .delete-action {
   color: #d84d63;
-}
-
-.source-card {
-  gap: 8px;
-  padding: 14px 16px;
-  border: 1px solid var(--border-color);
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.16);
-}
-
-.source-card.is-used {
-  opacity: 0.78;
-}
-
-.summary-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
-}
-
-.summary-heading {
-  color: var(--muted-text-color);
-  font-size: 13px;
-  font-weight: 600;
-}
-
-ul {
-  margin: 8px 0 0;
-  padding-left: 18px;
 }
 
 .switch-row {
@@ -491,35 +460,129 @@ ul {
   font-weight: 600;
 }
 
+.modal-form {
+  display: grid;
+  gap: 18px;
+}
+
+.inline-field {
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+}
+
+.inline-field__label {
+  color: var(--body-text-color);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.inline-field__control {
+  min-width: 0;
+}
+
+.form-row {
+  display: grid;
+  gap: 16px;
+}
+
 .form-row {
   align-items: flex-start;
 }
 
-.form-row :deep(.n-form-item) {
-  flex: 1;
+.form-row--compact {
+  grid-template-columns: 156px minmax(0, 1fr);
+}
+
+.form-item--time,
+.form-item--kind {
+  min-width: 0;
 }
 
 .native-time-input {
   width: 100%;
-  min-height: 40px;
-  padding: 0 12px;
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.26);
+  min-height: 42px;
+  padding: 0 14px;
+  border: 1px solid rgba(215, 204, 193, 0.58);
+  border-radius: 16px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(248, 245, 241, 0.56)),
+    rgba(248, 245, 241, 0.46);
   color: var(--body-text-color);
   font: inherit;
+  font-variant-numeric: tabular-nums;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    0 2px 8px rgba(116, 99, 83, 0.06);
+}
+
+:deep(.n-form-item) {
+  margin-bottom: 0;
+}
+
+:deep(.editor-modal .n-card) {
+  border: 1px solid rgba(255, 255, 255, 0.82) !important;
+  border-radius: 28px !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(248, 245, 241, 0.72)),
+    rgba(248, 244, 239, 0.56) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.96),
+    0 30px 70px rgba(116, 99, 83, 0.18) !important;
+  backdrop-filter: blur(30px) saturate(138%);
+}
+
+:deep(.editor-modal .n-card-header) {
+  padding: 24px 28px 10px !important;
+}
+
+:deep(.editor-modal .n-card__content) {
+  padding: 12px 28px 20px !important;
+}
+
+:deep(.editor-modal .n-card__footer) {
+  padding: 8px 28px 24px !important;
 }
 
 :deep(.n-input),
 :deep(.n-base-selection) {
-  --n-color: rgba(255, 255, 255, 0.3) !important;
-  --n-color-active: rgba(255, 255, 255, 0.4) !important;
-  --n-color-focus: rgba(255, 255, 255, 0.42) !important;
-  --n-border: 1px solid rgba(255, 255, 255, 0.4) !important;
-  --n-border-hover: 1px solid rgba(255, 255, 255, 0.52) !important;
-  --n-border-focus: 1px solid rgba(140, 205, 255, 0.52) !important;
-  --n-box-shadow-focus: 0 0 0 3px rgba(137, 196, 255, 0.12) !important;
+  --n-color: rgba(246, 249, 253, 0.76) !important;
+  --n-color-active: rgba(250, 252, 255, 0.86) !important;
+  --n-color-focus: rgba(250, 252, 255, 0.9) !important;
+  --n-border: 1px solid rgba(145, 163, 190, 0.38) !important;
+  --n-border-hover: 1px solid rgba(125, 148, 182, 0.5) !important;
+  --n-border-focus: 1px solid rgba(118, 170, 255, 0.58) !important;
+  --n-box-shadow-focus: 0 0 0 3px rgba(129, 181, 255, 0.14) !important;
   --n-text-color: var(--body-text-color) !important;
+  --n-border-radius: 14px !important;
+}
+
+:deep(.n-base-selection-placeholder),
+:deep(.n-input__placeholder) {
+  color: transparent !important;
+}
+
+:deep(.source-option) {
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+}
+
+:deep(.source-option.is-used) {
+  opacity: 0.52;
+}
+
+:deep(.source-option__time) {
+  color: var(--muted-text-color);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+:deep(.source-option__title) {
+  min-width: 0;
 }
 
 @media (max-width: 980px) {
@@ -529,13 +592,13 @@ ul {
 }
 
 @media (max-width: 720px) {
-  .summary-grid,
-  .form-row {
+  .inline-field,
+  .form-row--compact {
     grid-template-columns: 1fr;
   }
 
-  .form-row {
-    display: grid;
+  .inline-field {
+    gap: 8px;
   }
 }
 </style>

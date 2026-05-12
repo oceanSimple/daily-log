@@ -66,16 +66,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { NModal } from 'naive-ui';
 
 import AppSidebar from '@/components/AppSidebar.vue';
 import { useAppLocale } from '@/composables/useAppLocale';
 import {
   ArchiveIcon,
-  BookTextIcon,
   CalendarIcon,
-  HomeIcon,
   ListTodoIcon,
 } from '@/components/task-icons';
 import { useDailyHubStore } from '@/store/dailyHub';
@@ -86,6 +84,10 @@ const settingsOpen = ref(false);
 const store = useDailyHubStore();
 const preferences = usePreferencesStore();
 const { t } = useAppLocale();
+
+onMounted(() => {
+  void store.initialize();
+});
 
 const weekStartOptions = computed<Array<{ label: string; value: WeekStartDay }>>(() => [
   { label: t('settings.weekDays.0'), value: 0 },
@@ -98,16 +100,6 @@ const weekStartOptions = computed<Array<{ label: string; value: WeekStartDay }>>
 ]);
 
 const navItems = computed(() => [
-  {
-    label: t('sidebar.dashboard'),
-    icon: HomeIcon,
-    to: '/',
-  },
-  {
-    label: t('sidebar.dayLog'),
-    icon: BookTextIcon,
-    to: `/day/${store.todayKey}`,
-  },
   {
     label: t('sidebar.calendar'),
     icon: CalendarIcon,
@@ -133,13 +125,15 @@ const navItems = computed(() => [
   min-height: calc(100vh - 32px);
   grid-template-columns: 296px minmax(0, 1fr);
   margin: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.52);
-  border-radius: 24px;
+  border: var(--glass-border);
+  border-radius: 32px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0.12)),
-    rgba(245, 248, 252, 0.48);
-  box-shadow: var(--shadow-strong);
-  backdrop-filter: blur(28px) saturate(140%);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.56), rgba(255, 255, 255, 0.28)),
+    rgba(252, 249, 245, 0.62);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.88),
+    var(--shadow-strong);
+  backdrop-filter: blur(30px) saturate(135%);
   overflow: hidden;
   transition: grid-template-columns 0.18s ease;
 }
@@ -151,8 +145,10 @@ const navItems = computed(() => [
 .app-shell__content {
   min-width: 0;
   min-height: 0;
-  padding: 32px 34px 40px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.08));
+  padding: 36px 38px 44px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.16)),
+    rgba(249, 246, 241, 0.2);
   overflow-y: auto;
 }
 
@@ -198,11 +194,11 @@ const navItems = computed(() => [
 
 .locale-option {
   min-height: 42px;
-  border: 1px solid rgba(255, 255, 255, 0.46);
-  border-radius: 14px;
+  border: 1px solid var(--border-color-soft);
+  border-radius: 16px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.28)),
-    rgba(245, 248, 252, 0.42);
+    var(--glass-panel),
+    rgba(252, 249, 245, 0.46);
   color: var(--body-text-color);
   font-size: 14px;
   font-weight: 600;
@@ -218,19 +214,19 @@ const navItems = computed(() => [
 }
 
 .locale-option--active {
-  border-color: rgba(85, 161, 220, 0.42);
+  border-color: rgba(111, 146, 219, 0.42);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.72),
-    0 10px 24px rgba(95, 140, 194, 0.12);
+    inset 0 1px 0 rgba(255, 255, 255, 0.82),
+    0 14px 28px rgba(108, 120, 133, 0.12);
 }
 
 .settings-placeholder {
   padding: 14px 16px;
-  border: 1px solid rgba(255, 255, 255, 0.44);
-  border-radius: 16px;
+  border: 1px solid var(--border-color-soft);
+  border-radius: 18px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.22)),
-    rgba(244, 248, 252, 0.34);
+    var(--glass-panel-soft),
+    rgba(252, 249, 245, 0.42);
   color: var(--muted-text-color);
   font-size: 13px;
 }
