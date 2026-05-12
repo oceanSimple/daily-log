@@ -1,0 +1,5 @@
+.cache/
+docker-data/postgres/
+frontend/node_modules/
+frontend/dist/
+.env
