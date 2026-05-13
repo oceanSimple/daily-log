@@ -21,6 +21,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.backend
+      args:
+        GOPROXY: ${GOPROXY:-https://goproxy.cn,direct}
+        GOSUMDB: ${GOSUMDB:-sum.golang.google.cn}
     container_name: daily-log-backend
     environment:
       APP_ENV: production

@@ -74,10 +74,13 @@ DB_USER=daily_log
 DB_PASSWORD=<strong-password>
 CORS_ORIGIN=http://<server-ip>:5173
 SEED_ON_BOOT=true
+GOPROXY=https://goproxy.cn,direct
+GOSUMDB=sum.golang.google.cn
 VITE_API_BASE_URL=http://<server-ip>:8080
 ```
 
 If you have a domain, replace `http://<server-ip>:5173` and `http://<server-ip>:8080` with your real frontend and API URLs.
+If your server cannot access `proxy.golang.org` reliably, keep `GOPROXY=https://goproxy.cn,direct` so the backend image can download Go modules during `docker build`.
 
 ### 4. Build and start the stack
 
@@ -147,6 +150,7 @@ Persistent PostgreSQL data is stored in:
 
 - `VITE_API_BASE_URL` must not stay as `http://127.0.0.1:8080` on a real server. Use the server IP or your production API domain.
 - `CORS_ORIGIN` should not remain `*` in production. Restrict it to the actual frontend origin.
+- If backend image builds time out on `go mod download`, set `GOPROXY=https://goproxy.cn,direct` in `.env` and rebuild.
 - If you need HTTPS, place Nginx or Caddy in front of the frontend and backend services.
 - `docker-compose.yml` currently exposes PostgreSQL on `5432`. On a public server, restrict access with firewall rules or remove the external port mapping if you do not need direct database access.
 
