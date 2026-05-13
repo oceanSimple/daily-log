@@ -374,27 +374,47 @@ export const useDailyHubStore = defineStore('dailyHub', () => {
     records.value = [...records.value];
   }
 
-  function toggleEventCompleted(eventId: string) {
+  async function toggleEventCompleted(eventId: string) {
     const sourceRecord = records.value.find((record) => record.events.some((event) => event.id === eventId));
     if (!sourceRecord) return;
+    const existing = sourceRecord.events.find((event) => event.id === eventId);
+    if (!existing) return;
 
-    sourceRecord.events = sourceRecord.events.map((event) =>
-      event.id === eventId ? { ...event, completed: !event.completed } : event,
-    );
+    const updatedEvent = await updateEventRequest(eventId, {
+      title: existing.title,
+      startAt: existing.startAt,
+      endAt: existing.endAt,
+      date: existing.date,
+      completed: !existing.completed,
+      isFocus: existing.isFocus,
+      notes: existing.notes,
+    });
+    const eventIndex = sourceRecord.events.findIndex((event) => event.id === eventId);
+    if (eventIndex < 0) return;
+    sourceRecord.events[eventIndex] = updatedEvent;
+    sourceRecord.events = [...sourceRecord.events].sort((a, b) => a.startAt.localeCompare(b.startAt));
     records.value = [...records.value];
   }
 
-  function toggleTaskCompleted(taskId: string) {
+  async function toggleTaskCompleted(taskId: string) {
     const sourceRecord = records.value.find((record) => record.tasks.some((task) => task.id === taskId));
     if (!sourceRecord) return;
+    const existing = sourceRecord.tasks.find((task) => task.id === taskId);
+    if (!existing) return;
 
-    sourceRecord.tasks = sourceRecord.tasks.map((task) => {
-      if (task.id !== taskId) return task;
-      return {
-        ...task,
-        status: task.status === 'done' ? 'todo' : 'done',
-      };
+    const updatedTask = await updateTaskRequest(taskId, {
+      title: existing.title,
+      priority: existing.priority,
+      status: existing.status === 'done' ? 'todo' : 'done',
+      dueAt: existing.dueAt,
+      date: existing.date,
+      isFocus: existing.isFocus,
+      notes: existing.notes,
     });
+    const taskIndex = sourceRecord.tasks.findIndex((task) => task.id === taskId);
+    if (taskIndex < 0) return;
+    sourceRecord.tasks[taskIndex] = updatedTask;
+    sourceRecord.tasks = [...sourceRecord.tasks].sort((a, b) => a.dueAt.localeCompare(b.dueAt));
     records.value = [...records.value];
   }
 

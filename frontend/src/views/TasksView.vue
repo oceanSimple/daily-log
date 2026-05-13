@@ -28,6 +28,7 @@
             v-for="event in sortedEvents"
             :key="event.id"
             class="planner-card"
+            :class="{ 'is-complete': event.completed }"
             role="button"
             tabindex="0"
             @click="openEditEvent(event)"
@@ -59,6 +60,21 @@
               </div>
               <h3>{{ event.title }}</h3>
               <p v-if="event.notes" class="planner-item__notes">{{ event.notes }}</p>
+            </div>
+            <div class="planner-card__footer">
+              <n-tooltip trigger="hover">
+                <template #trigger>
+                  <button class="complete-toggle" type="button" @click.stop="store.toggleEventCompleted(event.id)">
+                    <span class="complete-toggle__icon" :class="{ 'is-complete': event.completed }">
+                      <n-icon v-if="event.completed" size="14"><CheckIcon /></n-icon>
+                    </span>
+                    <span class="complete-toggle__label">
+                      {{ event.completed ? t('tasks.completed') : t('tasks.incomplete') }}
+                    </span>
+                  </button>
+                </template>
+                {{ event.completed ? t('tasks.markIncomplete') : t('tasks.markComplete') }}
+              </n-tooltip>
             </div>
           </article>
         </div>
@@ -165,6 +181,10 @@
             <n-input v-model:value="eventForm.notes" type="textarea" :autosize="{ minRows: 4, maxRows: 6 }" />
           </n-form-item>
           <div class="switch-row">
+            <span class="switch-row__label">{{ t('tasks.labels.done') }}</span>
+            <n-switch v-model:value="eventForm.completed" />
+          </div>
+          <div class="switch-row">
             <span class="switch-row__label">{{ t('tasks.labels.focus') }}</span>
             <n-switch v-model:value="eventForm.isFocus" />
           </div>
@@ -266,7 +286,9 @@ function compareDoneLast(
 }
 
 const sortedEvents = computed(() =>
-  [...activeRecord.value.events].sort((a, b) => a.startAt.localeCompare(b.startAt)),
+  [...activeRecord.value.events].sort((a, b) =>
+    compareDoneLast(a.completed, b.completed, a.startAt, b.startAt),
+  ),
 );
 
 const sortedTasks = computed(() =>
@@ -283,6 +305,7 @@ const eventForm = reactive({
   title: '',
   startTime: '09:00',
   endTime: '10:00',
+  completed: false,
   isFocus: false,
   notes: '',
 });
@@ -310,6 +333,7 @@ function resetEventForm() {
   eventForm.title = '';
   eventForm.startTime = '09:00';
   eventForm.endTime = '10:00';
+  eventForm.completed = false;
   eventForm.isFocus = false;
   eventForm.notes = '';
 }
@@ -341,6 +365,7 @@ function openEditEvent(event: Event) {
   eventForm.title = event.title;
   eventForm.startTime = event.startAt.slice(11, 16);
   eventForm.endTime = event.endAt.slice(11, 16);
+  eventForm.completed = event.completed;
   eventForm.isFocus = Boolean(event.isFocus);
   eventForm.notes = event.notes ?? '';
   eventModalOpen.value = true;
@@ -358,7 +383,7 @@ function submitEvent() {
     startAt: `${date}T${eventForm.startTime}:00`,
     endAt: `${date}T${eventForm.endTime}:00`,
     date,
-    completed: false,
+    completed: eventForm.completed,
     isFocus: eventForm.isFocus,
     notes: eventForm.notes.trim() || undefined,
   };

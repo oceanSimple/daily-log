@@ -180,6 +180,25 @@
                     <span v-else-if="item.isCompleted">{{ t('calendar.legend.completed') }}</span>
                     <span v-else>{{ t('calendar.card.open') }}</span>
                   </div>
+                  <div class="board-card__footer">
+                    <n-tooltip trigger="hover">
+                      <template #trigger>
+                        <button
+                          class="complete-toggle complete-toggle--compact"
+                          type="button"
+                          @click.stop="toggleCalendarItemCompleted(item)"
+                        >
+                          <span class="complete-toggle__icon" :class="{ 'is-complete': item.isCompleted }">
+                            <n-icon v-if="item.isCompleted" size="14"><CheckIcon /></n-icon>
+                          </span>
+                          <span class="complete-toggle__label">
+                            {{ item.isCompleted ? t('tasks.completed') : t('tasks.incomplete') }}
+                          </span>
+                        </button>
+                      </template>
+                      {{ item.isCompleted ? t('tasks.markIncomplete') : t('tasks.markComplete') }}
+                    </n-tooltip>
+                  </div>
                 </button>
 
                 <n-empty v-if="!historyItems.length" size="small" :description="t('calendar.empty.history')" />
@@ -389,7 +408,7 @@ import {
   NTooltip,
 } from 'naive-ui';
 
-import { FocusIcon, MinusIcon, PlusIcon } from '@/components/task-icons';
+import { CheckIcon, FocusIcon, MinusIcon, PlusIcon } from '@/components/task-icons';
 import PageHeader from '@/components/PageHeader.vue';
 import SectionCard from '@/components/SectionCard.vue';
 import { useAppLocale } from '@/composables/useAppLocale';
@@ -834,6 +853,14 @@ function openItem(item: CalendarBoardItem) {
   const task = store.records.flatMap((record) => record.tasks).find((entry) => entry.id === item.sourceId);
   if (!task) return;
   openEditTask(task);
+}
+
+function toggleCalendarItemCompleted(item: CalendarBoardItem) {
+  if (item.kind === 'event') {
+    return store.toggleEventCompleted(item.sourceId);
+  }
+
+  return store.toggleTaskCompleted(item.sourceId);
 }
 
 function openEditEvent(event: Event) {
@@ -1400,6 +1427,7 @@ function submitTask() {
 
 .board-card__topline,
 .board-card__meta,
+.board-card__footer,
 .switch-row,
 .switch-field,
 .modal-footer {
@@ -1448,10 +1476,57 @@ function submitTask() {
   background: rgba(255, 255, 255, 0.66);
 }
 
+.board-card__footer {
+  justify-content: flex-start;
+}
+
 .board-card--history {
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 245, 247, 0.54)),
     rgba(255, 244, 246, 0.52);
+}
+
+.complete-toggle {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--body-text-color);
+  cursor: pointer;
+}
+
+.complete-toggle--compact {
+  min-height: 28px;
+}
+
+.complete-toggle__icon {
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid rgba(72, 83, 96, 0.78);
+  border-radius: 999px;
+  color: transparent;
+  background: rgba(255, 255, 255, 0.7);
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease;
+}
+
+.complete-toggle__icon.is-complete {
+  border-color: #8faa99;
+  background: #8faa99;
+  color: #ffffff;
+}
+
+.complete-toggle__label {
+  color: var(--muted-text-color);
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .focus-toggle {
