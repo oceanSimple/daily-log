@@ -7,11 +7,15 @@ import { essaysData as initialEssays } from './data/essays'
 let schedulesData = JSON.parse(localStorage.getItem('mock_schedules') || 'null') || initialSchedules
 let todosData = JSON.parse(localStorage.getItem('mock_todos') || 'null') || initialTodos
 let essaysData = JSON.parse(localStorage.getItem('mock_essays') || 'null') || initialEssays
+let passwordVaultMeta = JSON.parse(localStorage.getItem('mock_password_vault_meta') || 'null') || { initialized: false }
+let passwordEntries = JSON.parse(localStorage.getItem('mock_password_entries') || 'null') || []
 
 const saveToLocal = () => {
   localStorage.setItem('mock_schedules', JSON.stringify(schedulesData))
   localStorage.setItem('mock_todos', JSON.stringify(todosData))
   localStorage.setItem('mock_essays', JSON.stringify(essaysData))
+  localStorage.setItem('mock_password_vault_meta', JSON.stringify(passwordVaultMeta))
+  localStorage.setItem('mock_password_entries', JSON.stringify(passwordEntries))
 }
 
 export const handlers = [
@@ -102,6 +106,52 @@ export const handlers = [
     const index = essaysData.findIndex((e: any) => e.id === id)
     if (index !== -1) {
       essaysData.splice(index, 1)
+      saveToLocal()
+      return new HttpResponse(null, { status: 204 })
+    }
+    return new HttpResponse(null, { status: 404 })
+  }),
+
+  http.get('/api/password-vault', () => {
+    return HttpResponse.json(passwordVaultMeta)
+  }),
+
+  http.post('/api/password-vault', async ({ request }) => {
+    passwordVaultMeta = await request.json()
+    passwordEntries = []
+    saveToLocal()
+    return HttpResponse.json(passwordVaultMeta)
+  }),
+
+  http.get('/api/passwords', () => {
+    return HttpResponse.json(passwordEntries)
+  }),
+
+  http.post('/api/passwords', async ({ request }) => {
+    const body = await request.json() as any
+    const newEntry = { ...body, id: `p${Date.now()}` }
+    passwordEntries.unshift(newEntry)
+    saveToLocal()
+    return HttpResponse.json(newEntry)
+  }),
+
+  http.patch('/api/passwords/:id', async ({ params, request }) => {
+    const id = params.id
+    const body = await request.json() as any
+    const index = passwordEntries.findIndex((entry: any) => entry.id === id)
+    if (index !== -1) {
+      passwordEntries[index] = { ...body, id }
+      saveToLocal()
+      return HttpResponse.json(passwordEntries[index])
+    }
+    return new HttpResponse(null, { status: 404 })
+  }),
+
+  http.delete('/api/passwords/:id', ({ params }) => {
+    const id = params.id
+    const index = passwordEntries.findIndex((entry: any) => entry.id === id)
+    if (index !== -1) {
+      passwordEntries.splice(index, 1)
       saveToLocal()
       return new HttpResponse(null, { status: 204 })
     }

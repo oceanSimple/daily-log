@@ -48,10 +48,6 @@ const currentHour = new Date().getHours()
 const currentMinute = new Date().getMinutes()
 
 // 只显示未完成、未超时的待办事项
-const completedCount = computed(() => {
-  return props.todos.filter(t => t.completed).length
-})
-
 const showAddModal = ref(false)
 
 const handleAddTodo = (data: any) => {

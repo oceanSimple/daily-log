@@ -4,14 +4,14 @@
       <div class="logo">
         <SvgIcon name="icon-dashboard" size="24px" />
       </div>
-      
+
       <nav class="nav-links">
-        <a href="#" class="nav-item active">
+        <RouterLink to="/" class="nav-item" :class="{ active: route.name === 'dashboard' }">
           <SvgIcon name="icon-home" size="20px" />
-        </a>
-        <a href="#" class="nav-item">
-          <SvgIcon name="icon-check-circle" size="20px" />
-        </a>
+        </RouterLink>
+        <RouterLink to="/passwords" class="nav-item" :class="{ active: route.name === 'passwords' }">
+          <SvgIcon name="lucide:lock-keyhole" size="20px" />
+        </RouterLink>
         <a href="#" class="nav-item">
           <SvgIcon name="icon-grid" size="20px" />
         </a>
@@ -37,7 +37,10 @@
 </template>
 
 <script setup lang="ts">
+import { RouterLink, useRoute } from 'vue-router'
 import SvgIcon from '../SvgIcon.vue'
+
+const route = useRoute()
 </script>
 
 <style scoped>
